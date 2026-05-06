@@ -1,209 +1,157 @@
-# Competitor Tracker CLI
+# Competitor Tracker
 
-Tracks what AI companies ship (products, features, papers, etc.). Useful for blog posts and competitive analysis.
+Tracks AI company shipping activity (product launches, features, announcements) for reference in blog posts.
 
-## Why This Tool Exists
+## What It Does
 
-When writing blog posts or doing competitive analysis, Justin needs to quickly reference what AI companies have shipped. This tool provides a structured database of competitive intelligence that's easy to query and export.
+- Accepts new shipping entries via CLI
+- Stores entries in structured JSON format
+- Generates weekly/monthly summary reports
+- Filters by company, date range, category
+- Outputs clean markdown for easy reference
 
-## Features
+## Companies Tracked
 
-- **Add entries**: Track products, features, papers, and other releases
-- **List recent entries**: See what happened in the last N days
-- **Search**: Find entries by company, product, or keywords
-- **Export**: Export data to JSON, CSV, or Markdown
-- **Statistics**: See which companies are most active
+- Anthropic (Claude, safety research)
+- OpenAI (ChatGPT, GPT models, API)
+- Google DeepMind (Gemini, AlphaFold, research)
+- Meta (Llama models, research, products)
+- Microsoft (Copilot, Azure AI, research)
+- Stability AI (image/video generation)
+- Midjourney (image generation)
+- Perplexity (search/AI assistant)
+- Mistral (language models, API)
+- Custom companies as needed
 
-## Quick Start
+## Installation
 
 ```bash
 cd ~/.openclaw/workspace/tools/competitor-tracker
-python3 main.py --help
+pip install -e .
 ```
 
-## Usage Examples
+## Usage
 
-### Add a new entry
+### Add a new shipping entry
 
 ```bash
-# Product launch
-python3 main.py add \
-  --company "OpenAI" \
-  --item "GPT-5" \
-  --date "2026-05-04" \
-  --url "https://openai.com/gpt5" \
-  --notes "Major upgrade, 10x faster" \
-  --category product
+# Basic entry
+competitor-track add "OpenAI" "Launched ChatGPT 4o" "New model with voice and vision"
 
-# Research paper
-python3 main.py add \
-  --company "Anthropic" \
-  --item "Constitutional AI v3" \
-  --date "2026-05-03" \
-  --url "https://arxiv.org/abs/..." \
-  --category paper
+# With category
+competitor-track add "Anthropic" "Claude 3.5 Sonnet" "New flagship model" --category model
 
-# Feature release
-python3 main.py add \
-  --company "Google" \
-  --item "Gemini Code Assist for Python" \
-  --category feature
+# With links
+competitor-track add "Google" "Gemini 1.5 Pro" "2M context window" --link https://blog.google/technology/ai/
+
+# With impact rating (1-5)
+competitor-track add "Meta" "Llama 3.1" "405B parameter model" --impact 5
 ```
 
-### List recent entries
+### Generate reports
 
 ```bash
-# Last 7 days (default)
-python3 main.py list
-
-# Last 30 days
-python3 main.py list --days 30
+# List all entries
+competitor-track list
 
 # Filter by company
-python3 main.py list --company "OpenAI"
+competitor-track list --company OpenAI
+
+# Filter by date range (last 7 days)
+competitor-track list --days 7
 
 # Filter by category
-python3 main.py list --category paper
+competitor-track list --category model
+
+# Generate markdown report
+competitor-track report --output ~/reports/ai-shipping-weekly.md
 ```
 
-### Search entries
+### Manage data
 
 ```bash
-# Search by keyword
-python3 main.py search --query "GPT"
+# Show data location
+competitor-track info
 
-# Search by company
-python3 main.py search --query "Anthropic"
+# Export to JSON
+competitor-track export --format json --output ai-shipping.json
+
+# Import from JSON
+competitor-track import --format json --input ai-shipping.json
 ```
 
-### Export data
+## Data Structure
 
-```bash
-# Export to JSON (default)
-python3 main.py export --format json --output competitors.json
-
-# Export to CSV for spreadsheets
-python3 main.py export --format csv --output competitors.csv
-
-# Export to Markdown for blog posts
-python3 main.py export --format markdown --output competitors.md
-```
-
-### Show statistics
-
-```bash
-python3 main.py stats
-```
-
-Output:
-```
-📈 Competitor Tracker Statistics
-================================================================================
-Total entries: 42
-Date range: 2026-04-01 to 2026-05-04
-Companies tracked: 8
-
-By company:
-  • OpenAI: 15 entries
-  • Anthropic: 10 entries
-  • Google: 8 entries
-  • Meta: 5 entries
-  • ...
-
-By category:
-  • product: 20 entries
-  • feature: 12 entries
-  • paper: 8 entries
-  • other: 2 entries
-```
-
-## Data Storage
-
-Entries are stored in `~/.openclaw/workspace/data/competitor-tracker.json` as JSON.
+Entries are stored in `~/.openclaw/workspace/data/competitor-tracker/entries.json`:
 
 ```json
-[
-  {
-    "id": 1,
-    "company": "OpenAI",
-    "item": "GPT-5",
-    "date": "2026-05-04",
-    "url": "https://openai.com/gpt5",
-    "notes": "Major upgrade, 10x faster",
-    "category": "product",
-    "added_at": "2026-05-04T05:45:00.000000"
-  }
-]
+{
+  "entries": [
+    {
+      "id": "uuid",
+      "timestamp": "2026-05-06T19:00:00Z",
+      "company": "OpenAI",
+      "name": "ChatGPT 4o",
+      "description": "New model with voice and vision",
+      "category": "model",
+      "links": ["https://openai.com/blog/chatgpt-4o"],
+      "impact": 5,
+      "notes": "Available in free tier"
+    }
+  ]
+}
 ```
 
 ## Categories
 
-- **product**: Full product launches (GPT-5, Claude 4, etc.)
-- **feature**: New features or updates (API additions, integrations, etc.)
-- **paper**: Research papers (arXiv, blog posts, technical reports)
-- **other**: Announcements, acquisitions, partnerships
+- `model` - New language model or foundation model
+- `feature` - New feature or capability
+- `api` - API change, pricing, or availability
+- `product` - New product or service
+- `research` - Research paper or breakthrough
+- `safety` - Safety, alignment, or security announcement
+- `other` - Everything else
 
-## Use Cases
+## Impact Rating
 
-### Blog Post Research
+1 - Minor update, niche interest
+2 - Notable change, some users affected
+3 - Significant feature, broad interest
+4 - Major launch, industry attention
+5 - Breakthrough, redefines category
 
-When writing about a topic, export relevant entries:
+## Reports
 
-```bash
-# Export all OpenAI products to markdown
-python3 main.py list --company "OpenAI" --category product > openai-products.md
+The `report` command generates a markdown summary:
+
+```markdown
+# AI Shipping Report - Week of May 6, 2026
+
+## High Impact (5)
+- **OpenAI**: ChatGPT 4o - New model with voice and vision
+- **Meta**: Llama 3.1 - 405B parameter model
+
+## Models
+- Anthropic: Claude 3.5 Sonnet
+- Google: Gemini 1.5 Pro
+- Mistral: Mistral Large 2
+
+## Features
+- OpenAI: Advanced voice mode
+- Anthropic: Artifacts feature
+
+## Summary
+This week: 8 launches across 5 companies
+Top impact: OpenAI (3), Meta (2), Anthropic (2), Google (1)
 ```
 
-### Competitive Intelligence
+## Integration
 
-Get weekly summary of what competitors shipped:
-
-```bash
-# Show last 7 days of activity
-python3 main.py list --days 7 > weekly-competitor-update.md
-```
-
-### Historical Analysis
-
-Track company activity over time:
-
-```bash
-# Export to CSV for charts
-python3 main.py export --format csv --output competitor-activity.csv
-```
-
-## Integration with Squad Tools
-
-This tool complements other squad tools:
-- **Content Pipeline**: Use tracker data in blog angles
-- **Blog Assistant**: Reference competitor releases in outlines
-- **Squad Activity Digest**: Include competitive intel in daily summary
-
-## Automation
-
-Add entries automatically from cron:
-
-```bash
-# Daily cron to add items from RSS feeds (future feature)
-0 9 * * * cd ~/.openclaw/workspace/tools/competitor-tracker && python3 auto-ingest.py
-```
-
-## Requirements
-
-- Python 3.6+
-- No external dependencies
-
-## Future Enhancements
-
-- Auto-import from RSS feeds / blogs
-- Web UI for easier browsing
-- Integration with news APIs for automatic detection
-- Trend analysis and activity graphs
+This tool is useful for:
+- Justin: Reference when writing blog posts about AI developments
+- Marcus: Track research breakthroughs for AI/ML research
+- Seneca: Generate weekly shipping digests for team updates
 
 ## License
 
 MIT
-
----
-
-**Built by Archimedes** for the OpenSeneca squad.

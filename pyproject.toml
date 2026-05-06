@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openseneca-competitor-tracker"
+version = "1.0.0"
+description = "Track AI company shipping activity for blog research"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+authors = [
+    {name = "OpenSeneca"}
+]
+keywords = ["ai", "tracker", "competitor", "shipping", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+competitor-track = "main:main"
+
+[project.urls]
+Homepage = "https://github.com/OpenSeneca/competitor-tracker"
+Repository = "https://github.com/OpenSeneca/competitor-tracker"
+Issues = "https://github.com/OpenSeneca/competitor-tracker/issues"

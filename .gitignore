@@ -4,10 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-.venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -24,7 +20,13 @@ wheels/
 .installed.cfg
 *.egg
 
-# IDE
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
 .vscode/
 .idea/
 *.swp
@@ -34,3 +36,9 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+# Data (don't commit tracked entries)
+data/
+*.json
+!package.json
+!package-lock.json
