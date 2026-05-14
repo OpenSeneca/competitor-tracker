@@ -22,6 +22,7 @@ import uuid
 # Configuration
 DATA_DIR = Path.home() / ".openclaw" / "workspace" / "data" / "competitor-tracker"
 ENTRIES_FILE = DATA_DIR / "entries.json"
+OUTPUT_DIR = Path.home() / ".openclaw" / "workspace" / "outputs"
 
 # Valid companies and categories
 COMPANIES = [
@@ -243,11 +244,97 @@ def import_entries(input_file: str) -> None:
 
     print(f"Imported {len(new_entries)} entries from {input_file}")
 
+def generate_weekly_digest() -> str:
+    """Generate a weekly digest report."""
+    # Get entries from the last 7 days
+    entries = list_entries(days=7)
+    now = datetime.utcnow()
+    week_number = now.isocalendar()[1]
+    year = now.year
+
+    if not entries:
+        return f"# AI Shipping Digest - Week {week_number} ({year})\n\nNo entries found this week."
+
+    # Calculate stats
+    companies_count = {}
+    impact_count = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    category_count = {}
+
+    for entry in entries:
+        company = entry["company"]
+        companies_count[company] = companies_count.get(company, 0) + 1
+
+        impact = entry.get("impact", 2)
+        impact_count[impact] += 1
+
+        category = entry.get("category", "other")
+        category_count[category] = category_count.get(category, 0) + 1
+
+    # Build digest
+    lines = []
+    lines.append(f"# AI Shipping Digest - Week {week_number} ({year})")
+    lines.append("")
+    lines.append(f"**Generated:** {now.strftime('%Y-%m-%d %H:%M UTC')}")
+    lines.append(f"**Period:** {now - timedelta(days=7).strftime('%Y-%m-%d')} to {now.strftime('%Y-%m-%d')}")
+    lines.append("")
+    lines.append(f"## 📊 This Week")
+    lines.append(f"")
+    lines.append(f"- **Total entries:** {len(entries)}")
+    lines.append(f"- **Companies tracked:** {len(companies_count)}")
+    lines.append(f"- **High impact (5):** {impact_count[5]}")
+    lines.append("")
+
+    # Top companies
+    lines.append(f"## 🏢 Top Companies")
+    sorted_companies = sorted(companies_count.items(), key=lambda x: x[1], reverse=True)
+    for company, count in sorted_companies:
+        lines.append(f"- {company}: {count} shipping(s)")
+    lines.append("")
+
+    # High impact entries
+    high_impact = [e for e in entries if e.get("impact", 0) >= 4]
+    if high_impact:
+        lines.append(f"## 🔥 High Impact (4-5 stars)")
+        for entry in high_impact:
+            timestamp = datetime.fromisoformat(entry["timestamp"].replace("Z", "+00:00"))
+            date_str = timestamp.strftime("%m-%d")
+            stars = "⭐" * entry.get("impact", 2)
+            lines.append(f"- [{date_str}] **{entry['company']}**: {entry['name']}")
+            if entry.get("description"):
+                lines.append(f"  {entry['description']} {stars}")
+            if entry.get("links"):
+                lines.append(f"  🔗 {', '.join(entry['links'])}")
+        lines.append("")
+
+    # By category
+    lines.append(f"## 📦 By Category")
+    sorted_categories = sorted(category_count.items(), key=lambda x: x[1], reverse=True)
+    for category, count in sorted_categories:
+        lines.append(f"- {category.capitalize()}: {count}")
+    lines.append("")
+
+    # All entries
+    lines.append(f"## 📋 All Entries")
+    for entry in entries:
+        timestamp = datetime.fromisoformat(entry["timestamp"].replace("Z", "+00:00"))
+        date_str = timestamp.strftime("%Y-%m-%d")
+        stars = "⭐" * entry.get("impact", 2)
+        lines.append(f"**[{date_str}] {entry['company']}: {entry['name']}** {stars}")
+        if entry.get("description"):
+            lines.append(f"{entry['description']}")
+        if entry.get("category"):
+            lines.append(f"*Category: {entry['category']}*")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
 def show_info() -> None:
     """Show data location and stats."""
     data = load_entries()
     print(f"Data directory: {DATA_DIR}")
     print(f"Entries file: {ENTRIES_FILE}")
+    print(f"Output directory: {OUTPUT_DIR}")
     print(f"Total entries: {len(data['entries'])}")
 
     if data["entries"]:
@@ -293,6 +380,11 @@ def main() -> None:
 
     # Info command
     subparsers.add_parser("info", help="Show data location and stats")
+
+    # Digest command
+    digest_parser = subparsers.add_parser("digest", help="Generate weekly digest")
+    digest_parser.add_argument("--output", "-o", help="Output file path (default: outputs/competitor-digest-YYYY-Www.md)")
+    digest_parser.add_argument("--save", action="store_true", help="Save digest to outputs directory")
 
     args = parser.parse_args()
 
@@ -343,6 +435,27 @@ def main() -> None:
 
     elif args.command == "info":
         show_info()
+
+    elif args.command == "digest":
+        digest = generate_weekly_digest()
+
+        if args.save:
+            now = datetime.utcnow()
+            week_number = now.isocalendar()[1]
+            filename = f"competitor-digest-{now.year}-W{week_number:02d}.md"
+            output_path = OUTPUT_DIR / filename
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, "w") as f:
+                f.write(digest)
+            print(f"Digest saved to: {output_path}")
+        elif args.output:
+            output_path = Path(args.output)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, "w") as f:
+                f.write(digest)
+            print(f"Digest saved to: {output_path}")
+        else:
+            print(digest)
 
 if __name__ == "__main__":
     main()
