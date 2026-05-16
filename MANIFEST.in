@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+include *.sh
+recursive-include data *.json *.yaml
